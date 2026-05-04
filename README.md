@@ -1,8 +1,6 @@
-# Task-Manager-Pro-v2.0
-Advanced Task Management System
- Task Manager Pro v2.0
+# Task Manager Pro v2.0
 
-*** with FastAPI, JWT Authentication, SQLAlchemy, PostgreSQL/SQLite, and comprehenAdvanced Task Management System*sive security features.
+**Advanced Task Management System** with FastAPI, JWT Authentication, SQLAlchemy, PostgreSQL/SQLite, and comprehensive security features.
 
 ## 🎯 Features
 
