@@ -4,28 +4,37 @@ from datetime import datetime
 from typing import Tuple, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
-from passlib.context import CryptContext
+import bcrypt
 
-from .models_pro import User, Project, Task, Comment, Tag, AuditLog, UserRole, TaskStatus
+from .models_pro import User, Project, Task, Comment, Tag, AuditLog
 from .schemas_pro import (
     UserCreate, UserUpdate, ProjectCreate, ProjectUpdate, TaskCreate, TaskUpdate,
     CommentCreate, CommentUpdate, TagCreate, TagUpdate, TaskFilterParams, ProjectFilterParams
 )
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
 # ===================== Utility Functions =====================
 
 def hash_password(password: str) -> str:
     """Hash password using bcrypt."""
-    return pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, password_hash: str) -> bool:
     """Verify password against hash."""
-    return pwd_context.verify(plain_password, password_hash)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), password_hash.encode("utf-8"))
+
+
+def authenticate_user(db: Session, identifier: str, password: str) -> Optional[User]:
+    """Authenticate user by username or email."""
+    user = get_user_by_username(db, identifier)
+    if not user:
+        user = get_user_by_email(db, identifier)
+    if not user:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
+    return user
 
 
 def create_audit_log(
@@ -67,7 +76,7 @@ def create_user(db: Session, user_create: UserCreate) -> User:
     db_user = User(
         username=user_create.username,
         email=user_create.email,
-        password_hash=hash_password(user_create.password),
+        hashed_password=hash_password(user_create.password),
         role=user_create.role,
         is_active=user_create.is_active,
     )

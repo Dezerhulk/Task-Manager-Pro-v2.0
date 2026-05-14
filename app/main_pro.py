@@ -1,5 +1,4 @@
 """FastAPI application with REST API endpoints."""
-
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

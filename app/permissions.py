@@ -68,7 +68,7 @@ async def check_project_access(
         raise PermissionError("Only project owner can perform this action")
 
     # Check if user is project member
-    is_member = any(m.user_id == user_id for m in project.members)
+    is_member = any(m.id == user_id for m in project.members)
     if not is_member:
         raise PermissionError("You don't have access to this project")
 
@@ -121,7 +121,7 @@ async def check_task_access(
 
     # Check if user is member of task's project
     project = task.project
-    is_member = any(m.user_id == user_id for m in project.members)
+    is_member = any(m.id == user_id for m in project.members)
 
     if not is_member:
         raise PermissionError("You don't have access to this task")

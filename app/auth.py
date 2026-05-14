@@ -3,15 +3,13 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
 from .config import settings
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 
@@ -31,12 +29,13 @@ class TokenResponse(BaseModel):
 
 def hash_password(password: str) -> str:
     """Hash a password."""
-    return pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None) -> str:
@@ -87,7 +86,7 @@ def verify_token(token: str, token_type: str = "access") -> Optional[int]:
         return None
 
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security)) -> int:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> int:
     """Dependency to get current user from token."""
     token = credentials.credentials
 
@@ -104,7 +103,7 @@ async def get_current_user(credentials: HTTPAuthCredentials = Depends(security))
 
 
 async def get_current_user_optional(
-    credentials: Optional[HTTPAuthCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[int]:
     """Optional dependency to get current user."""
     if credentials is None:
